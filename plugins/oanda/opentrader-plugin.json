@@ -1,0 +1,23 @@
+{
+  "id": "oanda",
+  "name": "OANDA",
+  "version": "0.1.1",
+  "publisher": "saroo98",
+  "description": "Live OANDA prices for forex, metals and CFDs (OANDA:EURUSD …) from a free OANDA demo account's API token.",
+  "api": 4,
+  "provides": ["datafeed"],
+  "exchange": "OANDA",
+  "runtime": { "type": "process", "entry": "bin/oanda-plugin.exe", "args": [] },
+  "settings": [
+    { "key": "token", "label": "API token", "type": "password", "default": "",
+      "help": "From your OANDA hub: Tools > API (Manage API Access) > Generate." },
+    { "key": "environment", "label": "Account", "type": "select", "default": "practice",
+      "options": [{ "value": "practice", "label": "Demo (practice)" }, { "value": "live", "label": "Live" }],
+      "help": "Demo for a token of a demo account, Live for a token of a real-money account." },
+    { "key": "account", "label": "Account ID (optional)", "type": "text", "default": "",
+      "help": "Leave empty to use the token's first account." }
+  ],
+  "setup": "1. Open a free OANDA demo account (oanda.com, email only, no deposit).\n2. In the OANDA hub: Tools > API (Manage API Access) > Generate a token.\n3. Here: Settings, paste it in API token, keep Account: Demo, Apply.\nThen search OANDA: in the symbol search, or open the ready-made lists in the watchlist menu > Open list… > OANDA.",
+  "homepage": "https://github.com/saroo98/opentrader/tree/main/plugins/oanda",
+  "platforms": ["windows"]
+}
