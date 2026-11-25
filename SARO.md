@@ -33,6 +33,7 @@ As in the [README](README.md) (Rust, Node.js 22+, Tauri prerequisites, the drawi
 ```powershell
 npm ci
 cd src-tauri; cargo test --lib export_bindings; cd ..
+$env:NODE_OPTIONS = '--max-old-space-size=8192'   # the frontend build needs more than Node's default memory
 npm run tauri build -- --no-sign
 ```
 
