@@ -32,7 +32,8 @@ use tokio::io::AsyncBufReadExt;
 use tokio::sync::oneshot;
 
 const FILE: &str = "plugins.json";
-pub const DEFAULT_PORT: u16 = 47_822;
+/// OpenTrader SARO: 10 above the official app's 47822, so both can run at the same time.
+pub const DEFAULT_PORT: u16 = 47_832;
 const CATALOG_URL: &str = "https://raw.githubusercontent.com/deepentropy/opentrader/main/plugins/catalog.json";
 const LOG_LINES: usize = 300;
 
@@ -393,7 +394,48 @@ pub fn init(app: &AppHandle) {
     });
     data::init(app);
     broker::init(app);
+    preinstall_oanda(app);
     apply(app);
+}
+
+/// OpenTrader SARO comes with the OANDA plugin (plugins/oanda, packaged as bundled/oanda.zip): installed and turned
+/// on at the first start, so the user only pastes their OANDA token in its settings, and brought up to the bundled
+/// version when a newer OpenTrader SARO is installed (settings and token kept). A user who removed it does not get it
+/// back.
+fn preinstall_oanda(app: &AppHandle) {
+    const PACKAGE: &[u8] = include_bytes!("../../bundled/oanda.zip");
+    let Ok(dir) = plugins_dir(app) else { return };
+    let marker = dir.join(".oanda-preinstalled");
+    let first = !marker.exists();
+    let present = installed_manifest(app, "oanda");
+    let wanted = match &present {
+        None => first,
+        Some(m) => package::read_manifest(PACKAGE).is_ok_and(|bundled| older(&m.version, &bundled.version)),
+    };
+    if wanted {
+        match install(app, PACKAGE, true) {
+            Ok(m) if present.is_none() => {
+                if let Err(e) = update_plugin(app, &m.id, |p| p.enabled = true) {
+                    log(app, &m.id, format!("Could not turn the OANDA plugin on: {e}"));
+                }
+            }
+            Ok(_) => {}
+            Err(e) => {
+                log(app, "oanda", format!("Could not install the OANDA plugin that comes with the app: {e}"));
+                return;
+            }
+        }
+    }
+    if first {
+        let _ = std::fs::create_dir_all(&dir);
+        let _ = std::fs::write(marker, b"");
+    }
+}
+
+/// Version `a` comes before `b` ("0.1.9" < "0.1.10").
+fn older(a: &str, b: &str) -> bool {
+    let parts = |v: &str| v.split(|c: char| !c.is_ascii_digit()).map(|p| p.parse::<u64>().unwrap_or(0)).collect::<Vec<_>>();
+    parts(a) < parts(b)
 }
 
 /// Send the plugin its settings and what it is used for (`plugin.configure`).
@@ -1018,5 +1060,18 @@ mod tests {
         let t = toast(json!({"message":"é".repeat(400)})).unwrap();
         assert_eq!(t.message.chars().count(), 301);
         assert!(t.message.ends_with('…'));
+    }
+}
+
+#[cfg(test)]
+mod bundled_plugin_tests {
+    use super::older;
+
+    #[test]
+    fn versions_compare_by_number() {
+        assert!(older("0.1.1", "0.1.2"));
+        assert!(older("0.1.9", "0.1.10"));
+        assert!(!older("0.1.2", "0.1.2"));
+        assert!(!older("0.2.0", "0.1.9"));
     }
 }

@@ -208,7 +208,23 @@ func (s *Source) load() (int, error) {
 	return len(m), nil
 }
 
+// waitLoaded gives the instruments a moment to load: at start the app asks for the charts on screen before the
+// plugin has its list, and an error then left the chart with one bar until the user changed its interval.
+func (s *Source) waitLoaded(d time.Duration) {
+	end := time.Now().Add(d)
+	for time.Now().Before(end) {
+		s.mu.RLock()
+		done := s.loaded || s.errMsg != ""
+		s.mu.RUnlock()
+		if done {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
 func (s *Source) inst(ticker string) (Instrument, error) {
+	s.waitLoaded(20 * time.Second)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if !s.loaded {
@@ -241,6 +257,7 @@ func isMajor(t string) bool {
 }
 
 func (s *Source) search(query string) []map[string]string {
+	s.waitLoaded(10 * time.Second)
 	q := strings.NewReplacer("/", "", "_", "").Replace(strings.ToUpper(query))
 	s.mu.RLock()
 	defer s.mu.RUnlock()

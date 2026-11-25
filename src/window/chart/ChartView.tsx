@@ -25,7 +25,7 @@ import { CrosshairLockAxisPrimitive, CrosshairLockPanePrimitive, CrosshairLockVi
 import { textOnColor } from "lightweight-charts-drawing/core/color";
 import { EventMarkersPrimitive } from "./event-markers";
 import { NewsLollipopPrimitive } from "./news-lollipop";
-import { HistoryEndPrimitive } from "./history-end-marker";
+import { HistoryEndPrimitive, isDarkColor } from "./history-end-marker";
 import { providerCapabilities } from "../../data/providers/capabilities";
 import { CountdownPrimitive } from "./countdown";
 import { ChartControlBar } from "./ChartControlBar";
@@ -720,6 +720,10 @@ export function ChartView(props: ChartViewProps) {
   return (
     <div
       ref={(el) => (cx.paneRoot = el)}
+      // The overlays drawn in HTML (legend, A / L buttons, currency label) take
+      // the text colours of THIS chart's background, not of the app theme: a
+      // light chart under the dark theme had them white on light.
+      class={isDarkColor(readChartTokens(appearance()).bg) ? "ot-chart-canvas-dark" : "ot-chart-canvas-light"}
       style={{
         width: "100%",
         height: "100%",

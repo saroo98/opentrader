@@ -188,10 +188,9 @@ const STORE_FILE: &str = "opentrader.json";
 /// Release builds on Windows / macOS. A dev build checks only with
 /// `OPENTRADER_DEV_UPDATE=1` (the reference app's forceDevUpdate).
 fn enabled() -> bool {
-    if cfg!(target_os = "linux") {
-        return false;
-    }
-    !cfg!(debug_assertions) || std::env::var_os("OPENTRADER_DEV_UPDATE").is_some()
+    // OpenTrader SARO is built from a fork: the official releases would update it into the official app and drop
+    // its changes. It is updated by installing a newer OpenTrader SARO.
+    false
 }
 
 fn updater(app: &AppHandle) -> Result<Updater, UpdateError> {

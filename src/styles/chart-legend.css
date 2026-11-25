@@ -36,6 +36,37 @@
   pointer-events: none;
 }
 
+/* A chart pane's HTML overlays (legend, A / L buttons, currency label) take the
+   text colours of the chart's own background (ChartView sets the class from
+   it): a light chart under the dark theme, or a dark one under the light
+   theme, keeps them readable. Same values as html.theme-light / -dark. */
+.ot-chart-canvas-light :is(.ot-legend-stack, .ot-legend-pane, .ot-legend, .ot-ind-legend, .ot-ind-legend-toggler, .ot-price-modes, .ot-price-currency) {
+  --color-main-text: var(--color-cold-gray-900);
+  --ot-legend-title-color: var(--color-cold-gray-900);
+  --ot-legend-title-active-color: var(--color-cold-gray-900);
+  --color-text-primary: #0f0f0f;
+  --color-divider: #ebebeb;
+  --color-container-fill-primary-neutral-extra-bold: #2e2e2e;
+  --ot-text-inverse: #fff;
+  --ot-legend-toggler-border: #dbdbdb;
+  --ot-legend-toggler-color: #0f0f0f;
+  --ot-legend-toggler-hover: #000;
+  --ot-legend-toggler-overlay: rgba(0, 0, 0, 0.06);
+}
+.ot-chart-canvas-dark :is(.ot-legend-stack, .ot-legend-pane, .ot-legend, .ot-ind-legend, .ot-ind-legend-toggler, .ot-price-modes, .ot-price-currency) {
+  --color-main-text: var(--color-cold-gray-200);
+  --ot-legend-title-color: #b2b5be;
+  --ot-legend-title-active-color: var(--color-cold-gray-200);
+  --color-text-primary: #dbdbdb;
+  --color-divider: #4a4a4a;
+  --color-container-fill-primary-neutral-extra-bold: #f2f2f2;
+  --ot-text-inverse: #0f0f0f;
+  --ot-legend-toggler-border: #2b2b2b;
+  --ot-legend-toggler-color: #dbdbdb;
+  --ot-legend-toggler-hover: #f2f2f2;
+  --ot-legend-toggler-overlay: rgba(255, 255, 255, 0.08);
+}
+
 .ot-legend {
   pointer-events: none;
   user-select: none;

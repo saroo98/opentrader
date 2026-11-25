@@ -20,7 +20,7 @@ import (
 
 const (
 	pluginID    = "oanda"
-	version     = "0.1.1"
+	version     = "0.1.2"
 	apiVer      = 4 // password settings (3), ready-made watchlists (4)
 	devConnFile = "OpenTraderPlugins/oanda-dev.json"
 )
