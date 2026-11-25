@@ -36,6 +36,29 @@
   pointer-events: none;
 }
 
+/* A chart pane's HTML overlays (legend, A / L buttons, currency label) take the
+   text colours of the chart's own background (ChartView sets the class from
+   it): a light chart under the dark theme, or a dark one under the light
+   theme, keeps them readable. Same values as html.theme-light / -dark. */
+.ot-chart-canvas-light :is(.ot-legend, .ot-price-modes, .ot-price-currency) {
+  --color-main-text: var(--color-cold-gray-900);
+  --ot-legend-title-color: var(--color-cold-gray-900);
+  --ot-legend-title-active-color: var(--color-cold-gray-900);
+  --color-text-primary: #0f0f0f;
+  --color-divider: #ebebeb;
+  --color-container-fill-primary-neutral-extra-bold: #2e2e2e;
+  --ot-text-inverse: #fff;
+}
+.ot-chart-canvas-dark :is(.ot-legend, .ot-price-modes, .ot-price-currency) {
+  --color-main-text: var(--color-cold-gray-200);
+  --ot-legend-title-color: #b2b5be;
+  --ot-legend-title-active-color: var(--color-cold-gray-200);
+  --color-text-primary: #dbdbdb;
+  --color-divider: #4a4a4a;
+  --color-container-fill-primary-neutral-extra-bold: #f2f2f2;
+  --ot-text-inverse: #0f0f0f;
+}
+
 .ot-legend {
   pointer-events: none;
   user-select: none;

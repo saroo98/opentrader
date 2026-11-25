@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OpenTrader",
+  "productName": "OpenTrader SARO",
   "version": "0.4.33",
-  "identifier": "com.opentrader.app",
+  "identifier": "com.opentrader.saro",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "OpenTrader",
+        "title": "OpenTrader SARO",
         "width": 1440,
         "height": 900,
         "visible": false,
@@ -27,8 +27,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
-    "createUpdaterArtifacts": true,
+    "targets": [
+      "nsis"
+    ],
+    "createUpdaterArtifacts": false,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,7 +38,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "OpenTrader",
+    "publisher": "saroo98",
     "copyright": "© 2026 OpenTrader contributors. MIT License.",
     "category": "Finance",
     "shortDescription": "Desktop charting app",

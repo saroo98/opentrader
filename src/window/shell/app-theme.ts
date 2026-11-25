@@ -1,7 +1,7 @@
 /*
  * App theme and chart theme. The theme setting (App Settings > General) is
- * System, Dark or Light, stored as kv ot:theme; no stored value = System, the
- * reference desktop default. System follows the OS colour scheme live. The
+ * System, Dark or Light, stored as kv ot:theme; no stored value = Light, this
+ * build's default. System follows the OS colour scheme live. The
  * app theme is the <html> class the stylesheets key on; changes are observed
  * off that class (`observeTheme`) rather than via a second channel.
  *
@@ -21,9 +21,11 @@ const SYSTEM_DARK = "(prefers-color-scheme: dark)";
 
 const loadSetting = (): ThemeSetting => {
   try {
+    // This build starts in the light theme (its SARO chart template is a light
+    // chart); System and Dark stay a choice in App settings.
     const v = kv.getItem("ot:theme");
-    return v === "dark" || v === "light" ? v : "system";
-  } catch { return "system"; }
+    return v === "dark" || v === "system" ? v : "light";
+  } catch { return "light"; }
 };
 
 const systemTheme = (): StdTheme =>
@@ -47,8 +49,8 @@ export function createAppTheme() {
   /** App Settings theme picker. */
   function setThemeSetting(next: ThemeSetting) {
     setSettingSignal(next);
-    if (next === "system") kv.removeItem("ot:theme");
-    else kv.setItem("ot:theme", next);
+    // Stored as written: no stored value means the light default of this build.
+    kv.setItem("ot:theme", next);
     setThemeClass(resolveTheme(next));
   }
 

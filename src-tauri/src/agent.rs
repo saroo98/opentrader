@@ -25,7 +25,8 @@ use tauri_specta::Event;
 use tokio::sync::oneshot;
 
 const FILE: &str = "agent.json";
-pub const DEFAULT_PORT: u16 = 47_821;
+/// OpenTrader SARO: 10 above the official app's 47821, so both can run at the same time.
+pub const DEFAULT_PORT: u16 = 47_831;
 /// A tool call that runs a backtest or loads bars may take a while; past this the agent gets an error.
 const REPLY_TIMEOUT: Duration = Duration::from_secs(90);
 

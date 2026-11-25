@@ -8,6 +8,7 @@
 import { createSignal } from "solid-js";
 import * as kv from "../../data/kv";
 import { cloneDraft, reviveDraft, SETTINGS_FINGERPRINT, SETTINGS_REV, type Draft } from "./chart-settings";
+import saroTemplate from "../../data/saro-template.json";
 
 const TEMPLATES_KEY = "ot:chart-settings-templates";
 export type SettingsTemplate = { name: string; fingerprint: string; rev?: number; draft: unknown };
@@ -25,6 +26,24 @@ function readAll(): SettingsTemplate[] {
     return [];
   }
 }
+
+/** This build adds the SARO template to the list once, on first start. It is
+ *  then a template like the user's own (applied, replaced or removed the same
+ *  way), and never the default. */
+const SARO_SEEDED_KEY = "ot:saro-template-seeded";
+function seedSaroTemplate(): void {
+  try {
+    if (kv.getItem(SARO_SEEDED_KEY)) return;
+    const all = readAll();
+    if (!all.some((t) => t.name === saroTemplate.name)) {
+      kv.setItem(TEMPLATES_KEY, JSON.stringify([...all, saroTemplate as SettingsTemplate]));
+    }
+    kv.setItem(SARO_SEEDED_KEY, "1");
+  } catch {
+    // No storage: the list stays as it is.
+  }
+}
+seedSaroTemplate();
 
 const byName = (a: SettingsTemplate, b: SettingsTemplate) => a.name.localeCompare(b.name, undefined, { numeric: true });
 const usable = () => readAll().filter((t) => reviveDraft(t.draft, t.fingerprint, t.rev) !== undefined).sort(byName);

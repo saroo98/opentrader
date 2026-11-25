@@ -32,7 +32,8 @@ use tokio::io::AsyncBufReadExt;
 use tokio::sync::oneshot;
 
 const FILE: &str = "plugins.json";
-pub const DEFAULT_PORT: u16 = 47_822;
+/// OpenTrader SARO: 10 above the official app's 47822, so both can run at the same time.
+pub const DEFAULT_PORT: u16 = 47_832;
 const CATALOG_URL: &str = "https://raw.githubusercontent.com/deepentropy/opentrader/main/plugins/catalog.json";
 const LOG_LINES: usize = 300;
 
@@ -393,7 +394,37 @@ pub fn init(app: &AppHandle) {
     });
     data::init(app);
     broker::init(app);
+    preinstall_oanda(app);
     apply(app);
+}
+
+/// OpenTrader SARO comes with the OANDA plugin (plugins/oanda, packaged as bundled/oanda.zip): installed and turned
+/// on at the first start, so the user only pastes their OANDA token in its settings. Done once: a user who removes
+/// it does not get it back.
+fn preinstall_oanda(app: &AppHandle) {
+    const PACKAGE: &[u8] = include_bytes!("../../bundled/oanda.zip");
+    let Ok(dir) = plugins_dir(app) else { return };
+    let marker = dir.join(".oanda-preinstalled");
+    if marker.exists() {
+        return;
+    }
+    let present = app.state::<Plugins>().config.locked().plugins.contains_key("oanda");
+    if !present {
+        // Part of this app's own build: shown as verified.
+        match install(app, PACKAGE, true) {
+            Ok(m) => {
+                if let Err(e) = update_plugin(app, &m.id, |p| p.enabled = true) {
+                    log(app, &m.id, format!("Could not turn the OANDA plugin on: {e}"));
+                }
+            }
+            Err(e) => {
+                log(app, "oanda", format!("Could not install the OANDA plugin that comes with the app: {e}"));
+                return;
+            }
+        }
+    }
+    let _ = std::fs::create_dir_all(&dir);
+    let _ = std::fs::write(marker, b"");
 }
 
 /// Send the plugin its settings and what it is used for (`plugin.configure`).

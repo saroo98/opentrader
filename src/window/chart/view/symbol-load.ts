@@ -66,11 +66,19 @@ export function createSymbolLoad(cx: ChartCx): SymbolLoadApi {
   // bars back from the last bar, at most SYMBOL_CHANGE_MAX_BACK; and the price
   // scale is fitted once to the new symbol, also with auto scale off.
   let pendingScaleKeep: { barSpacing: number; rightOffset: number; leftTime?: number; symbol?: boolean } | null = null;
+  // The next bars applied follow a symbol, interval or session change: the
+  // price scale is fitted to them once, also with auto scale off. A manual
+  // price range kept from another series (a weekly range on a 5-minute chart)
+  // left the new bars as a flat line.
+  let refitPriceAfterSwap = false;
   // A chart a larger template added (no view of its own yet): the active
   // chart's bar spacing and right offset (reference app), like a symbol change.
   {
     const init = untrack(() => (props.visibleLogicalRange ? undefined : props.initialScale));
-    if (init) pendingScaleKeep = { barSpacing: init.barSpacing, rightOffset: init.rightOffset, symbol: true };
+    if (init) {
+      pendingScaleKeep = { barSpacing: init.barSpacing, rightOffset: init.rightOffset, symbol: true };
+      refitPriceAfterSwap = true;
+    }
   }
 
 
@@ -86,6 +94,7 @@ export function createSymbolLoad(cx: ChartCx): SymbolLoadApi {
       return;
     }
     if (sym === lastClearedSym && int === lastClearedInt && sess === lastClearedSess) return;
+    refitPriceAfterSwap = true;
     loadStartMs = performance.now();
     {
       const w = window as unknown as { __clickT?: number };
@@ -276,7 +285,6 @@ export function createSymbolLoad(cx: ChartCx): SymbolLoadApi {
         ts.setVisibleLogicalRange({ from: to - barsSpan(ts.width(), keep.barSpacing), to });
         framed = `keep bs=${keep.barSpacing.toFixed(2)} ro=${ro.toFixed(1)}`;
       }
-      if (keep.symbol) cx.fitPriceScaleOnce();
     } else if (savedInBounds) {
       cx.chart.timeScale().setVisibleLogicalRange({ from: saved!.from, to: saved!.to });
       framed = `saved ${saved!.from.toFixed(0)}..${saved!.to.toFixed(0)}`;
@@ -306,6 +314,10 @@ export function createSymbolLoad(cx: ChartCx): SymbolLoadApi {
         });
       }
       framed = view === null ? "all" : String(view);
+    }
+    if (refitPriceAfterSwap) {
+      refitPriceAfterSwap = false;
+      cx.fitPriceScaleOnce();
     }
     // The daily family's load is the whole history, except a data plugin's (its newest bars, older ones paged: #386).
     if (cx.rawDaily.length > 0 && dailyLoadIsWhole(props.symbol)) cx.historyExhausted = true;
