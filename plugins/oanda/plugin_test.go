@@ -57,6 +57,7 @@ type fakeOanda struct {
 	mu      sync.Mutex
 	streams []string // instruments of each pricing stream opened
 	now     int64
+	slow    time.Duration // the instrument list answers this late
 }
 
 func (f *fakeOanda) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +71,7 @@ func (f *fakeOanda) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.URL.Path == "/v3/accounts":
 		fmt.Fprint(w, `{"accounts":[{"id":"101-001-1-001"}]}`)
 	case strings.HasSuffix(r.URL.Path, "/instruments"):
+		time.Sleep(f.slow)
 		fmt.Fprint(w, `{"instruments":[
 			{"name":"EUR_USD","type":"CURRENCY","displayName":"EUR/USD","displayPrecision":5},
 			{"name":"USD_JPY","type":"CURRENCY","displayName":"USD/JPY","displayPrecision":3},
@@ -423,4 +425,22 @@ func TestFlow(t *testing.T) {
 		}
 		return false
 	}, "USDJPY quotes")
+}
+
+// At start the app asks for the chart on screen before the instruments are loaded: the request waits for them
+// instead of failing (it left the chart with one bar until the interval was changed).
+func TestBarsAskedWhileLoading(t *testing.T) {
+	f := withFake(t)
+	f.slow = 700 * time.Millisecond
+	a := startPlugin(t, "good")
+	now := f.now
+	m := a.request(20, "data.bars", fmt.Sprintf(`{"ticker":"EURUSD","resolution":"1D","from":%d,"to":%d,"countBack":10}`, now-40*86400, now+86400))
+	if m.Error != nil {
+		t.Fatalf("bars asked while loading: %s", m.Error.Message)
+	}
+	var info map[string]any
+	_ = json.Unmarshal(a.request(21, "data.symbolInfo", `{"ticker":"EURUSD"}`).Result, &info)
+	if info["pricescale"] != 100000.0 {
+		t.Errorf("symbol info %v", info)
+	}
 }
